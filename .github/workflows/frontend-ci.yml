@@ -42,7 +42,7 @@ jobs:
       - name: Run tests
         run: |
           cd starter/frontend
-          CI=true npm test -- --watchAll=false
+          CI=true npm run test -- --watchAll=false
 
   build:
     needs: [lint, test]
@@ -62,8 +62,8 @@ jobs:
       - name: Run tests in build job
         run: |
           cd starter/frontend
-          CI=true npm test -- --watchAll=false
+          CI=true npm run test -- --watchAll=false
       - name: Build application with Docker
         run: |
           cd starter/frontend
-          docker build -t frontend:ci-test .
+          docker build -t frontend:latest .
