@@ -2,13 +2,16 @@ FROM public.ecr.aws/docker/library/node:18.14.2-alpine3.17
 
 WORKDIR /app
 
-
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm ci
 
 # Copy full application code
 COPY . .
+
+# Declare build argument and pass it to application build environment
+ARG REACT_APP_MOVIE_API_URL
+ENV REACT_APP_MOVIE_API_URL=$REACT_APP_MOVIE_API_URL
 
 # Set environment flags to prevent ESLint / CI warnings from failing build
 ENV CI=false
