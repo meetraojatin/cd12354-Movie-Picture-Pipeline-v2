@@ -74,6 +74,6 @@ jobs:
       - name: Deploy to EKS with Kustomize
         run: |
           cd starter/backend/k8s
-          kustomize edit set image backend=${{ steps.login-ecr.outputs.registry }}/backend:${{ github.sha }}
+          kustomize edit set image 324702811080.dkr.ecr.us-east-1.amazonaws.com/backend=${{ steps.login-ecr.outputs.registry }}/backend:${{ github.sha }}
           kubectl apply -k .
-          kubectl rollout status deployment/backend
+          kubectl rollout status deployment/backend --timeout=120s

@@ -4,3 +4,8 @@ resources:
   - service.yaml
   - deployment.yaml
 namespace: default
+
+images:
+  - name: 324702811080.dkr.ecr.us-east-1.amazonaws.com/backend
+    newName: 324702811080.dkr.ecr.us-east-1.amazonaws.com/backend
+    newTag: "82d3ed9dc95231600f9bb69184c69752489759a4"
