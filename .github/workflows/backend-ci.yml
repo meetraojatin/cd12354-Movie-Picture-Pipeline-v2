@@ -21,8 +21,8 @@ jobs:
         run: |
           cd starter/backend
           python -m pip install --upgrade pip
-          pip install flake8
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pipenv flake8
+          pipenv install --system --deploy || pipenv install --system
 
       - name: Lint code
         run: |
@@ -43,13 +43,13 @@ jobs:
         run: |
           cd starter/backend
           python -m pip install --upgrade pip
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pipenv pytest
+          pipenv install --system --dev || pipenv install --system
 
       - name: Run Tests
         run: |
           cd starter/backend
-          pytest
+          PYTHONPATH=. pytest
 
   build:
     needs: [lint, test]
