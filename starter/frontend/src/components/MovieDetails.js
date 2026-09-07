@@ -13,7 +13,8 @@ function MovieDetail({ movie }) {
     if (movie && movie.id) {
       setLoading(true);
       setError(null);
-      axios.get(`${API_BASE_URL}/movies/${movie.id}`)
+      axios
+        .get(`${API_BASE_URL}/movies/${movie.id}`)
         .then((response) => {
           setDetails(response.data);
           setLoading(false);
@@ -43,13 +44,23 @@ function MovieDetail({ movie }) {
       ) : (
         <>
           <h2 style={styles.title}>{details?.title || movie?.title}</h2>
-          {details?.year && <p style={styles.meta}><strong>Release Year:</strong> {details.year}</p>}
-          {details?.genre && <p style={styles.meta}><strong>Genre:</strong> {details.genre}</p>}
-          {details?.director && <p style={styles.meta}><strong>Director:</strong> {details.director}</p>}
+          {details?.year && (
+            <p style={styles.meta}>
+              <strong>Release Year:</strong> {details.year}
+            </p>
+          )}
+          {details?.genre && (
+            <p style={styles.meta}>
+              <strong>Genre:</strong> {details.genre}
+            </p>
+          )}
+          {details?.director && (
+            <p style={styles.meta}>
+              <strong>Director:</strong> {details.director}
+            </p>
+          )}
           <div style={styles.divider}></div>
-          <p style={styles.description}>
-            {details?.description || 'No description available for this movie.'}
-          </p>
+          <p style={styles.description}>{details?.description || 'No description available for this movie.'}</p>
         </>
       )}
     </div>

@@ -11,11 +11,10 @@ function MovieList({ onMovieClick }) {
   const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/movies`)
+    axios
+      .get(`${API_BASE_URL}/movies`)
       .then((response) => {
-        const movieList = Array.isArray(response.data) 
-          ? response.data 
-          : response.data.movies || [];
+        const movieList = Array.isArray(response.data) ? response.data : response.data.movies || [];
         setMovies(movieList);
         setLoading(false);
       })
