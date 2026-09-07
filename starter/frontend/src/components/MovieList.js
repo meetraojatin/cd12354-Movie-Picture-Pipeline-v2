@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_MOVIE_API_URL || 'http://ad32eafd253f1427aa74f48dfdbbd13b-308859783.us-east-1.elb.amazonaws.com';
+const API_BASE_URL = process.env.REACT_APP_MOVIE_API_URL || 'http://aa89a76e643134c718b9c813117fe8bc-689587916.us-east-1.elb.amazonaws.com';
 
 function MovieList({ onMovieClick }) {
   const [movies, setMovies] = useState([]);
