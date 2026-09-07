@@ -3,7 +3,6 @@ import MovieList from './components/MovieList';
 import MovieDetails from './components/MovieDetails';
 import './App.css';
 
-
 export default function App() {
   const [selectedMovie, setSelectedMovie] = useState(null);
 
@@ -33,13 +32,13 @@ const styles = {
     padding: '24px',
     maxWidth: '1200px',
     margin: '0 auto',
-    fontFamily: 'sans-serif'
+    fontFamily: 'sans-serif',
   },
   sidebar: {
     flex: '1',
-    minWidth: '250px'
+    minWidth: '250px',
   },
   mainContent: {
-    flex: '2'
-  }
+    flex: '2',
+  },
 };
