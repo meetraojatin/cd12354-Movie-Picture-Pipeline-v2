@@ -1,16 +1,35 @@
-name: Frontend CI
+name: Frontend Continuous Integration
 
 on:
-  push:
-    paths:
-      - 'starter/frontend/**'
   pull_request:
     paths:
       - 'starter/frontend/**'
   workflow_dispatch:
 
 jobs:
-  lint-and-test:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'starter/frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd starter/frontend
+          npm ci || npm install
+
+      - name: Lint code
+        run: |
+          cd starter/frontend
+          npm run lint || true
+
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -30,10 +49,10 @@ jobs:
       - name: Run Tests
         run: |
           cd starter/frontend
-          npm test -- --watchAll=false || true
+          npm test -- --watchAll=false
 
-  build-check:
-    needs: lint-and-test
+  build:
+    needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -41,4 +60,4 @@ jobs:
       - name: Build Docker Image (Dry Run)
         run: |
           cd starter/frontend
-          docker build --build-arg REACT_APP_MOVIE_API_URL="http://afd66a3fa629f4d489a79120022eef05-1142585480.us-east-1.elb.amazonaws.com" -t frontend:ci .
+          docker build --build-arg REACT_APP_MOVIE_API_URL="http://localhost:5000" -t frontend:ci .

@@ -1,4 +1,4 @@
-name: Backend CD
+name: Backend Continuous Deployment
 
 on:
   push:
@@ -8,7 +8,36 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: |
+          cd starter/backend
+          pip install flake8
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: |
+          cd starter/backend
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pytest
+
   deploy:
+    needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -24,18 +53,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push Backend Image to ECR
+      - name: Build and Push Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: backend
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           cd starter/backend
-          IMAGE_URI="${{ secrets.ECR_BACKEND_REPO }}:latest"
-          docker build -t $IMAGE_URI .
-          docker push $IMAGE_URI
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Update Kubeconfig
         run: |
           aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME || 'cluster' }} --region ${{ secrets.AWS_REGION || 'us-east-1' }}
 
-      - name: Deploy Backend to EKS
+      - name: Deploy to EKS with Kustomize
         run: |
-          kubectl apply -k starter/backend/k8s/ --validate=false
-          kubectl rollout restart deployment/backend || true
+          cd starter/backend/k8s
+          kustomize edit set image backend=${{ steps.login-ecr.outputs.registry }}/backend:${{ github.sha }}
+          kubectl apply -k .
+          kubectl rollout status deployment/backend

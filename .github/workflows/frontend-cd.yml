@@ -1,4 +1,4 @@
-name: Frontend CD
+name: Frontend Continuous Deployment
 
 on:
   push:
@@ -8,7 +8,38 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'starter/frontend/package-lock.json'
+      - run: |
+          cd starter/frontend
+          npm ci || npm install
+          npm run lint || true
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'starter/frontend/package-lock.json'
+      - run: |
+          cd starter/frontend
+          npm ci || npm install
+          npm test -- --watchAll=false
+
   deploy:
+    needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -24,20 +55,25 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push Frontend Image to ECR
+      - name: Build and Push Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: frontend
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           cd starter/frontend
-          IMAGE_URI="${{ secrets.ECR_FRONTEND_REPO }}:latest"
           docker build \
             --build-arg REACT_APP_MOVIE_API_URL="http://afd66a3fa629f4d489a79120022eef05-1142585480.us-east-1.elb.amazonaws.com" \
-            -t $IMAGE_URI .
-          docker push $IMAGE_URI
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Update Kubeconfig
         run: |
           aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME || 'cluster' }} --region ${{ secrets.AWS_REGION || 'us-east-1' }}
 
-      - name: Deploy Frontend to EKS
+      - name: Deploy to EKS with Kustomize
         run: |
-          kubectl apply -k starter/frontend/k8s/ --validate=false
-          kubectl rollout restart deployment/frontend || true
+          cd starter/frontend/k8s
+          kustomize edit set image frontend=${{ steps.login-ecr.outputs.registry }}/frontend:${{ github.sha }}
+          kubectl apply -k .
+          kubectl rollout status deployment/frontend
